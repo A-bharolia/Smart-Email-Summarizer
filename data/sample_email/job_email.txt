@@ -1,0 +1,12 @@
+Subject: Interview Invitation
+
+Dear Candidate,
+
+Congratulations! You have been shortlisted for the Data Engineer position.
+
+Your technical interview is scheduled for August 25, 2026 at 11:00 AM.
+
+Please keep your resume and academic documents ready.
+
+Regards,
+Recruitment Team

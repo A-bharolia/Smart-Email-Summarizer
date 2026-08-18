@@ -1,0 +1,17 @@
+From: manager@example.com
+To: employee@example.com
+Subject: Project Meeting Reminder
+Date: Tue, 18 Aug 2026 10:00:00 +0530
+MIME-Version: 1.0
+Content-Type: text/plain; charset="UTF-8"
+
+Hello Team,
+
+This is a reminder that our project meeting is scheduled for Friday at 10 AM.
+
+Please prepare your progress report before the meeting.
+
+The final report should be submitted by Thursday evening.
+
+Regards,
+Project Manager
