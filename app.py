@@ -5,39 +5,13 @@ from src.email_processor import (
     process_txt_file,
     extract_eml_content
 )
-from src.summarizer import summarize_email
 
-def show_ai_analysis(email_text):
-    """
-    Generate and display AI analysis for an email.
-    """
+from src.summarizer import analyze_email
 
-    if not email_text.strip():
-        st.warning("No email content available for AI analysis.")
-        return
 
-    with st.spinner("🤖 Gemini is analyzing the email..."):
-
-        try:
-
-            result = summarize_email(email_text)
-
-            st.subheader("🤖 AI Analysis")
-
-            st.markdown(result)
-
-        except Exception as e:
-
-            st.error(
-                "Unable to generate AI analysis. "
-                "Please check your API key and internet connection."
-            )
-
-            st.caption(str(e))
-
-# --------------------------------------------------
+# -------------------------------------------------
 # PAGE CONFIGURATION
-# --------------------------------------------------
+# -------------------------------------------------
 
 st.set_page_config(
     page_title="Smart Email Summarizer",
@@ -46,9 +20,156 @@ st.set_page_config(
 )
 
 
-# --------------------------------------------------
-# TITLE
-# --------------------------------------------------
+# -------------------------------------------------
+# AI ANALYSIS FUNCTION
+# -------------------------------------------------
+
+def show_ai_analysis(email_text):
+
+    if not email_text.strip():
+        st.warning("No email content available for AI analysis.")
+        return
+
+    with st.spinner("🤖 Gemini is analyzing the email..."):
+
+        try:
+            result = analyze_email(email_text)
+
+        except Exception as e:
+
+            st.error("Unable to generate AI analysis.")
+            st.caption(str(e))
+
+            return
+
+    st.divider()
+
+    st.header("🤖 AI Email Analysis")
+
+
+    # -------------------------------------------------
+    # SUMMARY
+    # -------------------------------------------------
+
+    st.subheader("📝 Summary")
+
+    st.write(
+        result.get(
+            "summary",
+            "No summary available."
+        )
+    )
+
+
+    # -------------------------------------------------
+    # KEY POINTS
+    # -------------------------------------------------
+
+    st.subheader("🔑 Key Points")
+
+    key_points = result.get(
+        "key_points",
+        []
+    )
+
+    if key_points:
+
+        for point in key_points:
+            st.markdown(f"- {point}")
+
+    else:
+        st.write("No key points found.")
+
+
+    # -------------------------------------------------
+    # ACTION ITEMS
+    # -------------------------------------------------
+
+    st.subheader("✅ Action Items")
+
+    action_items = result.get(
+        "action_items",
+        []
+    )
+
+    if action_items:
+
+        for item in action_items:
+            st.markdown(f"- [ ] {item}")
+
+    else:
+        st.write("No action items found.")
+
+
+    # -------------------------------------------------
+    # DEADLINES
+    # -------------------------------------------------
+
+    st.subheader("⏰ Deadlines")
+
+    deadlines = result.get(
+        "deadlines",
+        []
+    )
+
+    if deadlines:
+
+        for deadline in deadlines:
+            st.markdown(f"- {deadline}")
+
+    else:
+        st.write("No deadlines found.")
+
+
+    # -------------------------------------------------
+    # PRIORITY
+    # -------------------------------------------------
+
+    st.subheader("🚨 Priority")
+
+    priority = result.get(
+        "priority",
+        "Unknown"
+    )
+
+    priority_reason = result.get(
+        "priority_reason",
+        ""
+    )
+
+    st.write(f"**Priority:** {priority}")
+
+    if priority_reason:
+        st.write(f"Reason: {priority_reason}")
+
+
+    # -------------------------------------------------
+    # SENTIMENT
+    # -------------------------------------------------
+
+    st.subheader("😊 Sentiment")
+
+    sentiment = result.get(
+        "sentiment",
+        "Unknown"
+    )
+
+    sentiment_reason = result.get(
+        "sentiment_reason",
+        ""
+    )
+
+    st.write(f"**Sentiment:** {sentiment}")
+
+    if sentiment_reason:
+        st.write(
+            f"Reason: {sentiment_reason}"
+        )
+
+
+# -------------------------------------------------
+# MAIN APPLICATION
+# -------------------------------------------------
 
 st.title("📧 Smart Email Summarizer")
 
@@ -59,154 +180,48 @@ st.write(
 st.divider()
 
 
-# --------------------------------------------------
-# INPUT METHOD
-# --------------------------------------------------
+# -------------------------------------------------
+# EMAIL INPUT
+# -------------------------------------------------
 
-st.subheader("📥 Email Input")
+st.header("📨 Enter Your Email")
 
-input_method = st.radio(
-    "Choose how you want to provide the email:",
-    ["Paste Email", "Upload File"]
+email_text = st.text_area(
+    "Paste your email below:",
+    height=250,
+    placeholder="Paste your email here..."
 )
 
 
-# --------------------------------------------------
-# PASTE EMAIL
-# --------------------------------------------------
-
-if input_method == "Paste Email":
-
-    email_text = st.text_area(
-        "Paste your email below:",
-        height=300,
-        placeholder="Paste your email here..."
-    )
-
-    if st.button("Process Email"):
-
-        if email_text.strip():
-
-            cleaned_email = process_email_text(email_text)
-
-            st.success("Email processed successfully!")
-
-            st.subheader("📝 Processed Email")
-
-            st.text_area(
-                "Cleaned email:",
-                value=cleaned_email,
-                height=250
-            )
-
-            show_ai_analysis(cleaned_email)
-
-        else:
-
-            st.warning(
-                "Please enter an email before processing."
-            )
+# -------------------------------------------------
+# ANALYZE BUTTON
+# -------------------------------------------------
 
 
-# --------------------------------------------------
-# FILE UPLOAD
-# --------------------------------------------------
+if st.button("🤖 Analyze Email"):
 
-else:
+    if email_text.strip():
 
-    uploaded_file = st.file_uploader(
-        "Upload an email file:",
-        type=["txt", "eml"]
-    )
-
-    if uploaded_file is not None:
-
-        st.info(
-            f"Selected file: {uploaded_file.name}"
+        # Process email
+        processed_email = process_email_text(
+            email_text
         )
 
-        if st.button("Process File"):
+        # Show processed email
+        with st.expander("📄 View Processed Email"):
+            st.write(processed_email)
 
-            file_bytes = uploaded_file.getvalue()
+        # Show AI analysis
+        show_ai_analysis(
+            processed_email
+        )
 
-            # ------------------------------------------
-            # TXT FILE
-            # ------------------------------------------
+        with st.expander("📄 View Original Email"):
+            st.write(email_text)
 
-            if uploaded_file.name.lower().endswith(".txt"):
+    else:
 
-                cleaned_email = process_txt_file(
-                    file_bytes
-                )
+        st.warning(
+            "Please enter an email first."
+        )
 
-                st.success(
-                    "TXT file processed successfully!"
-                )
-
-                st.subheader("📝 Processed Email")
-
-                st.text_area(
-                    "Cleaned email:",
-                    value=cleaned_email,
-                    height=300
-                )
-
-                show_ai_analysis(cleaned_email)
-
-            # ------------------------------------------
-            # EML FILE
-            # ------------------------------------------
-
-            elif uploaded_file.name.lower().endswith(".eml"):
-
-                email_data = extract_eml_content(
-                    file_bytes
-                )
-
-                st.success(
-                    "EML file processed successfully!"
-                )
-
-                st.subheader("📧 Email Information")
-
-                col1, col2 = st.columns(2)
-
-                with col1:
-
-                    st.write("**Sender:**")
-
-                    st.write(
-                        email_data["sender"]
-                    )
-
-                    st.write("**Recipient:**")
-
-                    st.write(
-                        email_data["recipient"]
-                    )
-
-                with col2:
-
-                    st.write("**Subject:**")
-
-                    st.write(
-                        email_data["subject"]
-                    )
-
-                    st.write("**Date:**")
-
-                    st.write(
-                        email_data["date"]
-                    )
-
-                st.divider()
-
-                st.subheader("📄 Email Body")
-
-                st.text_area(
-                    "Processed email body:",
-                    value=email_data["body"],
-                    height=300
-                )
-
-                show_ai_analysis(email_data["body"])

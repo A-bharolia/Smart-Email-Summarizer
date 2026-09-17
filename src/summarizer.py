@@ -1,4 +1,5 @@
 import os
+import json
 
 from dotenv import load_dotenv
 from google import genai
@@ -9,52 +10,68 @@ load_dotenv()
 
 
 # Get Gemini API key
+api_key = os.getenv("GEMINI_API_KEY")
 
-
-load_dotenv()
-
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-
+if not api_key:
+    raise ValueError(
+        "GEMINI_API_KEY is not set. "
+        "Please add it to your .env file."
+    )
 
 
 # Create Gemini client
-client = genai.Client(api_key=GEMINI_API_KEY)
+client = genai.Client(api_key=api_key)
 
 
-def summarize_email(email_text):
+def analyze_email(email_text):
     """
-    Send an email to Gemini and return an AI-generated analysis.
+    Analyze an email using Gemini and return structured data.
     """
 
     prompt = f"""
-You are an email analysis assistant.
+You are an intelligent email analysis assistant.
 
-Analyze the following email.
+Analyze the following email carefully.
 
-Provide the result in the following format:
+Return ONLY valid JSON.
+Do not include markdown.
+Do not include ```json.
+Do not include any explanation outside the JSON.
 
-SUMMARY:
-Write a short summary of the email in 2-4 sentences.
+Use exactly this structure:
 
-KEY POINTS:
-- List the most important points.
-- Keep them short and clear.
+{{
+    "summary": "A short summary of the email in 2-4 sentences.",
+    "key_points": [
+        "Important point 1",
+        "Important point 2"
+    ],
+    "action_items": [
+        "Task the recipient needs to perform"
+    ],
+    "deadlines": [
+        "Date, time, or deadline mentioned in the email"
+    ],
+    "priority": "High",
+    "priority_reason": "Short explanation for the priority",
+    "sentiment": "Positive",
+    "sentiment_reason": "Short explanation of the sentiment"
+}}
 
-ACTION ITEMS:
-- List tasks that the recipient needs to perform.
-- If there are no action items, write "None".
+Rules:
 
-DEADLINES:
-- List any dates, times, or deadlines mentioned.
-- If there are no deadlines, write "None".
-
-PRIORITY:
-Choose one:
-High
-Medium
-Low
-
-Explain briefly why you selected the priority.
+1. summary must be short and clear.
+2. key_points must contain the most important information.
+3. action_items must contain tasks the recipient needs to perform.
+4. If there are no action items, return an empty list.
+5. deadlines must contain important dates, times, or deadlines.
+6. If there are no deadlines, return an empty list.
+7. priority must be exactly one of:
+   High, Medium, Low
+8. sentiment must be exactly one of:
+   Positive, Neutral, Negative
+9. Do not invent information that is not present in the email.
+10. Return valid JSON only.
 
 EMAIL:
 {email_text}
@@ -65,4 +82,26 @@ EMAIL:
         contents=prompt
     )
 
-    return response.text
+    response_text = response.text.strip()
+
+    # Remove markdown code fences if Gemini adds them
+    if response_text.startswith("```json"):
+        response_text = response_text[7:]
+
+    if response_text.startswith("```"):
+        response_text = response_text[3:]
+
+    if response_text.endswith("```"):
+        response_text = response_text[:-3]
+
+    response_text = response_text.strip()
+
+    try:
+        result = json.loads(response_text)
+
+    except json.JSONDecodeError:
+        raise ValueError(
+            "Gemini returned an invalid JSON response."
+        )
+
+    return result
