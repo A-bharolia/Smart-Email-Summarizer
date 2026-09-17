@@ -5,7 +5,35 @@ from src.email_processor import (
     process_txt_file,
     extract_eml_content
 )
+from src.summarizer import summarize_email
 
+def show_ai_analysis(email_text):
+    """
+    Generate and display AI analysis for an email.
+    """
+
+    if not email_text.strip():
+        st.warning("No email content available for AI analysis.")
+        return
+
+    with st.spinner("🤖 Gemini is analyzing the email..."):
+
+        try:
+
+            result = summarize_email(email_text)
+
+            st.subheader("🤖 AI Analysis")
+
+            st.markdown(result)
+
+        except Exception as e:
+
+            st.error(
+                "Unable to generate AI analysis. "
+                "Please check your API key and internet connection."
+            )
+
+            st.caption(str(e))
 
 # --------------------------------------------------
 # PAGE CONFIGURATION
@@ -71,6 +99,8 @@ if input_method == "Paste Email":
                 height=250
             )
 
+            show_ai_analysis(cleaned_email)
+
         else:
 
             st.warning(
@@ -120,6 +150,8 @@ else:
                     value=cleaned_email,
                     height=300
                 )
+
+                show_ai_analysis(cleaned_email)
 
             # ------------------------------------------
             # EML FILE
@@ -176,3 +208,5 @@ else:
                     value=email_data["body"],
                     height=300
                 )
+
+                show_ai_analysis(email_data["body"])
