@@ -306,3 +306,77 @@ def get_emails_by_priority(priority):
     connection.close()
 
     return rows
+
+def get_email_statistics():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT COUNT(*) AS total_emails
+        FROM emails
+        """
+    )
+
+    total_emails = cursor.fetchone()["total_emails"]
+
+    cursor.execute(
+        """
+        SELECT COUNT(*) AS high_priority
+        FROM emails
+        WHERE priority = 'High'
+        """
+    )
+
+    high_priority = cursor.fetchone()["high_priority"]
+
+    cursor.execute(
+        """
+        SELECT COUNT(*) AS medium_priority
+        FROM emails
+        WHERE priority = 'Medium'
+        """
+    )
+
+    medium_priority = cursor.fetchone()["medium_priority"]
+
+    cursor.execute(
+        """
+        SELECT COUNT(*) AS low_priority
+        FROM emails
+        WHERE priority = 'Low'
+        """
+    )
+
+    low_priority = cursor.fetchone()["low_priority"]
+
+    connection.close()
+
+    return {
+        "total_emails": total_emails,
+        "high_priority": high_priority,
+        "medium_priority": medium_priority,
+        "low_priority": low_priority
+    }
+
+def get_sentiment_statistics():
+
+    connection = get_connection()
+
+    cursor = connection.cursor()
+
+    cursor.execute(
+        """
+        SELECT sentiment, COUNT(*) AS count
+        FROM emails
+        GROUP BY sentiment
+        """
+    )
+
+    rows = cursor.fetchall()
+
+    connection.close()
+
+    return rows
