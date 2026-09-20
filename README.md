@@ -30,3 +30,29 @@ The goal of this project is to reduce the time users spend reading long emails b
 ## Project Status
 
 Day 1 - Project setup and initial Streamlit interface completed.
+
+## Database
+
+The application uses SQLite to store analyzed emails and their AI-generated insights.
+
+Stored information includes:
+
+- Email subject
+- Sender
+- Email content
+- Summary
+- Key points
+- Action items
+- Deadlines
+- Priority
+- Sentiment
+- Analysis timestamp
+
+## Email History
+
+Users can:
+
+- View previously analyzed emails
+- Search emails
+- Filter emails by priority
+- Review previous AI analysis
